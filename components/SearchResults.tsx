@@ -13,7 +13,7 @@ export function SearchResults({results}){
         <div>
             {   results.map(result => {
                 return (
-                    <ProductItem product={result} />
+                    <ProductItem product={result} key={result.id}/>
                 )
             })}
         </div>
