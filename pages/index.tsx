@@ -3,9 +3,19 @@ import Image from 'next/image'
 import { FormEvent, useCallback, useState } from 'react'
 import { SearchResults } from '../components/SearchResults'
 
+type Results = {
+  totalPrice: number;
+  data: any[];
+}
+
 export default function Home() {
   const [search, setSearch] = useState('')
-  const [results, setResults] = useState([])
+  const [results, setResults] = useState<Results>(
+    {
+      totalPrice: 0,
+      data: []
+    }
+  )
   const handleSearch = async (event: FormEvent) => {
     event.preventDefault()
 
@@ -15,8 +25,26 @@ export default function Home() {
     }
     const response = await fetch(`http://localhost:3333/products?q=${search}`)
     const data = await response.json()
-    setResults(data)
+
+    const formatter = new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    })
+
+    const product = data.map(product => {
+      return {
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        priceFormatted:  formatter.format(product.price)
+      }
+    })
+
+
+    const totalPrice =  data.reduce((acc, curr) => acc + curr.price, 0)
+    setResults({data: product, totalPrice})
   }
+
 
   const addToWishList = useCallback(async (id: number) => {
     console.log(id)
@@ -33,7 +61,11 @@ export default function Home() {
         onChange={e => setSearch(e.target.value)}
         />
         </form>
-        <SearchResults results={results} onAddToWishList={addToWishList} />
+      <SearchResults
+          results={results.data}
+          onAddToWishList={addToWishList}
+          totalPrice={results.totalPrice}
+          />
     </div>
   )
 }
